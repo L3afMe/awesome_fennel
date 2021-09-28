@@ -1,6 +1,6 @@
 # AwesomeWM Fennel Config
 
-### Default AwesomeWM config rewritten in [Fennel](https://github.com/bakpakin/Fennel/)
+Default AwesomeWM config rewritten in [Fennel](https://github.com/bakpakin/Fennel/)
 
 # How to use
 
@@ -22,5 +22,5 @@ mkdir $XDG_CONFIG_DIRS/awesome/
 fennel --compile ./rc.fnl > $XDG_CONFIG_DIRS/awesome/rc.lua
 ```
 
-3) Make your own config written in this cool language. :D
+3) Make your own config written in this cool language :D
 
