@@ -11,7 +11,7 @@
           `(awful.button ,arg1 ,arg2 ,arg3)))
 
  :binds (fn [...]
-          (let [binds [...]]
+          (let [binds ...]
             `(awful.keyboard.append_global_keybindings
                ,(map (fn
                       [bind]
