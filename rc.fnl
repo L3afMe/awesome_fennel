@@ -215,7 +215,7 @@
                  :history_path (.. (awful.util.get_cache_dir) "/history_eval")}))}
    {:description "open a terminal" :group :launcher
     :mods [mod-key] :key :Return
-    :action (awful.spawn terminal)}
+    :action (fn [] awful.spawn terminal)}
    {:description "run a prompt" :group :launcher
     :mods [mod-key] :key :r
     :action (fn []
