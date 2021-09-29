@@ -65,11 +65,11 @@
 ;; {{{ Menu
 ;; Create a launcher widget and a main menu
 (local myawesomemenu
-  [{"hotkeys"     (fn [] (hotkeys_popup.show_help nil (awful.screen.focused)))}
-   {"manual"      (string.format "%s -e man awesome" terminal)}
-   ("edit config" (string.format "%s %s" editor-cmd awesome.conffile))
-   {"restart"     awesome.restart}
-   {"quit"        (fn [] (awesome.quit))}])
+  [["hotkeys"     (fn [] (hotkeys_popup.show_help nil (awful.screen.focused)))]
+   ["manual"      (string.format "%s -e man awesome" terminal)]
+   ["edit config" (string.format "%s %s" editor-cmd awesome.conffile)]
+   ["restart"     awesome.restart]
+   ["quit"        (fn [] (awesome.quit))]])
 
 (local mymainmenu
   (awful.menu
@@ -174,11 +174,15 @@
             :widget
             {:layout wibox.layout.align.horizontal
              1 {:layout wibox.layout.fixed.horizontal
-                1 s.mytaglist
-                2 s.mypromptbox}
+                1 mylauncher
+                2 s.mytaglist
+                3 s.mypromptbox}
              2 s.mytasklist
              3 {:layout wibox.layout.fixed.horizontal
-                1 (wibox.widget.systray)}}}))))
+                1 mykeyboardlayout
+                2 (wibox.widget.systray)
+                3 mytextclock
+                4 s.mylayoutbox}}}))))
 ;; }}} 
 
 ;; {{{ Mouse bindings
@@ -196,7 +200,7 @@
     :action hotkeys_popup.show_help}
    {:description "show main menu" :group :awesome
     :mods [mod-key] :key :w
-    :action mymainmenu:show}
+    :action (fn [] (mymainmenu:show))}
    {:description "reload awesome" :group :awesome
     :mods [mod-key :Control] :key :r
     :action awesome.restart}
@@ -207,23 +211,22 @@
     :mods [mod-key] :key :x
     :action (fn []
               (awful.prompt.run 
-                {:prompt "Run Lua code: "
-                 :textbox (fn []
-                            (let [screen (awful.screen.focused)]
-                              (screen.mypromptbox.widget)))
+                {:prompt "<b>Run Lua code:</b> "
+                 :textbox (let [screen (awful.screen.focused)]
+                            screen.mypromptbox.widget)
                  :exe_callback awful.util.eval
                  :history_path (.. (awful.util.get_cache_dir) "/history_eval")}))}
    {:description "open a terminal" :group :launcher
     :mods [mod-key] :key :Return
-    :action (fn [] awful.spawn terminal)}
+    :action (fn [] (awful.spawn terminal))}
    {:description "run a prompt" :group :launcher
     :mods [mod-key] :key :r
     :action (fn []
               (let [s (awful.screen.focused)]
                 (s.mypromptbox:run)))}
    {:description "show the menubar" :group :launcher
-    :mods [mod-key] :key p
-    :action menubar:show}])
+    :mods [mod-key] :key :p
+    :action menubar.show}])
 
 ;; Tags related keybindings
 (binds
@@ -257,40 +260,40 @@
    {:description "focus the previous screen" :group :client
     :mods [mod-key :Control] :key :k
     :action (fn [] (awful.screen.focus_relative -1))}
-   {:description "restore minimized" :group client
+   {:description "restore minimized" :group :client
     :mods [mod-key] :key :n
     :action (fn []
-              (local c (awful.client.restore)
-                (when c (c:activate {:raise true :context :key.unminimize}))))}])
+              (local c (awful.client.restore))
+              (when c (c:activate {:raise true :context :key.unminimize})))}])
 
 ;; Layout related keybindings
 (binds
-  [{:description "swap with next client by index" :group :client}
-   :mods [mod-key :Shift] :key :j
-   :action (fn [] (awful.client.swap.byidx  1))
+  [{:description "swap with next client by index" :group :client
+     :mods [mod-key :Shift] :key :j
+     :action (fn [] (awful.client.swap.byidx  1))}
    {:description "swap with previous client by index" :group :client
-    :mods [mod-key :Shift] :key :j
+    :mods [mod-key :Shift] :key :k
     :action (fn [] (awful.client.swap.byidx -1))}
    {:description "jump to urgent client" :group :client
     :mods [mod-key] :key :u
     :action awful.client.urgent.jumpto}
    {:description "increase master width factor" :group :layout
-    :mods [mod-key] :key :h
+    :mods [mod-key] :key :l
     :action (fn [] (awful.tag.incmwfact  0.05))}
    {:description "decrease master width factor" :group :layout
-    :mods [mod-key] :key :l
+    :mods [mod-key] :key :h
     :action (fn [] (awful.tag.incmwfact -0.05))}
    {:description "increase the number of master clients" :group :layout
-    :mods [mod-key :Shift] :key h
+    :mods [mod-key :Shift] :key :h
     :action (fn [] (awful.tag.incnmaster  1 nil true))}
    {:description "decrease the number of master clients" :group :layout
-    :mods [mod-key :Shift] :key l
+    :mods [mod-key :Shift] :key :l
     :action (fn [] (awful.tag.incnmaster -1 nil true))}
    {:description "increase the number of columns" :group :layout
-    :mods [mod-key :Control] :key h
+    :mods [mod-key :Control] :key :h
     :action (fn [] (awful.tag.incncol  1 nil true))}
    {:description "decrease the number of columns" :group :layout
-    :mods [mod-key :Control] :key l
+    :mods [mod-key :Control] :key :l
     :action (fn [] (awful.tag.incncol -1 nil true))}
    {:description "select next" :group :layout
     :mods [mod-key] :key :space
@@ -303,35 +306,37 @@
   [{:description "only view tag" :group :tag
     :mods [mod-key] :keygroup :numrow
     :action (fn [idx]
-              (let [screen (awful.screen.fucosed)
+              (let [screen (awful.screen.focused)
                     tag (. screen.tags idx)]
-                (tag:view_only)))}
+                (when tag
+                  (tag:view_only))))}
    {:description "toggle tag" :group :tag
     :mods [mod-key :Control] :keygroup :numrow
     :action (fn [idx]
-              (let [screen (awful.screen.fucosed)
+              (let [screen (awful.screen.focused)
                     tag (. screen.tags idx)]
-                (tag:viewtoggle)))}
+                (when tag
+                  (awful.tag.viewtoggle tag))))}
    {:description "move focused client to tag" :group :tag
     :mods [mod-key :Shift] :keygroup :numrow
     :action (fn [idx]
               (when client.focus
-                (local tag (client.focus.screen.tags idx))
-                (wen tag
+                (local tag (. client.focus.screen.tags idx))
+                (when tag
                      (client.focus:move_to_tag tag))))}
    {:description "toggle focus client on tag" :group :tag
     :mods [mod-key :Control :Shift] :keygroup :numrow
     :action (fn [idx]
               (when client.focus
-                (local tag (client.focus.screen.tags idx))
-                (wen tag
+                (local tag (. client.focus.screen.tags idx))
+                (when tag
                      (client.focus:toggle_tag tag))))}
    {:description "select layout directly" :group :layout
     :mods [mod-key] :keygroup :numpad
     :action (fn [idx]
               (local tag (. (awful.screen.focused) selected_tag))
               (when tag
-                (set t.layout (or (. t.layouts idx) t.layout))))}])
+                (set tag.layout (or (. tag.layouts idx) tag.layout))))}])
 
 (client.connect_signal
   "request::default_mousebindings"
@@ -441,21 +446,23 @@
     (local titlebar (awful.titlebar c))
     (set titlebar.widget
          {1 ;; Left
-            {1 awful.titlebar.widget.iconwidget
+            {1 (awful.titlebar.widget.iconwidget c)
+             :buttons buttons
+             :layout wibox.layout.fixed.horizontal}
+          2 ;; Middle
+            {1 {:align  :center
+                :widget (awful.titlebar.widget.titlewidget c)}
              :buttons buttons
              :layout wibox.layout.flex.horizontal}
-          2 ;; Middle
-            {:align  :center
-             :widget (awful.titlebar.widget.titlewidget c)}
           3 ;; Right
-            {1 (awful.titlebar.widget.floatingbutton c)
+            {1 (awful.titlebar.widget.floatingbutton  c)
              2 (awful.titlebar.widget.maximizedbutton c)
-             3 (awful.titlebar.widget.stickybutton c)
-             4 (awful.titlebar.widget.ontopbutton c)
-             5 (awful.titlebar.widget.closebutton c)
-             :layout (wibox.layout.fixed.horizontal)}
+             3 (awful.titlebar.widget.stickybutton    c)
+             4 (awful.titlebar.widget.ontopbutton     c)
+             5 (awful.titlebar.widget.closebutton     c)
+             :layout wibox.layout.fixed.horizontal}
              
-          :layout wibox.layout.fixed.horizontal})))
+          :layout wibox.layout.align.horizontal})))
 ;; }}}
 
 ;; {{{ Notifications
