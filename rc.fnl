@@ -13,13 +13,13 @@
 (require :awful.autofocus)
 
 ;; Widget and layout library
-(local wibox         (require :wibox))
+(local wibox (require :wibox))
 
 ;; Theme handling library
-(local beautiful     (require :beautiful))
+(local beautiful (require :beautiful))
 
 ;; Notification library
-(local naughty       (require :naughty))
+(local naughty (require :naughty))
 
 ;; Declarative object management
 (local ruled         (require :ruled))
@@ -34,14 +34,14 @@
 ;; Check if awesome encountered an error during startup and fell back to
 ;; another config (This code will only ever execute for the fallback config)
 (naughty.connect_signal "request::display_error"
-  (fn [message during-startup?]
-    (naughty.notification
-      {:urgency :critical
-       :title   (str "Oops, an error happened"
-                     (if during-startup?
-                       " during start-up!"
-                       "!"))
-       :message message})))
+                        (fn [message during-startup?]
+                          (naughty.notification
+                            {:urgency :critical
+                             :title   (.. "Oops, an error happened"
+                                          (if during-startup?
+                                            " during start-up!"
+                                            "!"))
+                             :message message})))
 ;; }}}
 
 ;; {{{ Variable definitions
@@ -112,77 +112,77 @@
 ;; Create a textclock widget
 (local mytextclock wibox.widget.textclock)
 
-(screen.connect_signal
-  "request::wallpaper"
-  (fn [s]
+(screen.connect_signal "request::wallpaper"
+  (fn [screen]
     ;; Wallpaper
     (when beautiful.wallpaper
       (local wallpaper beautiful.wallpaper)
       (gears.wallpaper.maximized
         ;; If wallpaper is a function, call it with the screen
         (if (= (type wallpaper) :function)
-          (wallpaper s)
+          (wallpaper screen)
           wallpaper)
-        s true))))
+        screen true))))
 
 (screen.connect_signal "request::desktop_decoration"
-  (fn [s]
+  (fn [screen]
     ;; Each screen has its own tag table.
-    (awful.tag ["1" "2" "3" "4" "5" "6" "7" "8" "9"] s (. awful.layout.layouts 1))
+    (awful.tag ["1" "2" "3" "4" "5" "6" "7" "8" "9"]
+               screen (. awful.layout.layouts 1))
 
     ;; Create a promptbox for each screen
-    (set s.mypromptbox (awful.widget.prompt))
+    (set screen.mypromptbox (awful.widget.prompt))
 
     ;; Create an imagebox widget which will contain an icon indicating which layout we're using.
     ;; We need one layoutbox per screen.
-    (set s.mylayoutbox
+    (set screen.mylayoutbox
          (awful.widget.layoutbox
-          {:screen s
-           :buttons [(btn 1 (fn [] (awful.layout.inc 1)))
-                     (btn 3 (fn [] (awful.layout.inc -1)))
-                     (btn 4 (fn [] (awful.layout.inc 1)))
-                     (btn 5 (fn [] (awful.layout.inc -1)))]}))
-    (set s.mytaglist
+           {:screen screen
+            :buttons [(btn 1 (fn [] (awful.layout.inc 1)))
+                      (btn 3 (fn [] (awful.layout.inc -1)))
+                      (btn 4 (fn [] (awful.layout.inc 1)))
+                      (btn 5 (fn [] (awful.layout.inc -1)))]}))
+    (set screen.mytaglist
          (awful.widget.taglist
-          {:screen  s
-           :filter  awful.widget.taglist.filter.all
-           :buttons [(btn           1 (fn [t] (t:view_only)))
-                     (btn [mod-key] 1 (fn [t] (when client.focus
-                                               (client.focus:move_to_tag t))))
-                     (btn           3 awful.tag.viewtoggle)
-                     (btn [mod-key] 3 (fn [t] (when client.focus
-                                               (client.focus:toggle_tag t))))
-                     (btn 4 (fn [t] (awful.tag.viewprev t.screen)))
-                     (btn 5 (fn [t] (awful.tag.viewnext t.screen)))]}))
-    (set s.mytasklist
+           {:screen  screen
+            :filter  awful.widget.taglist.filter.all
+            :buttons [(btn           1 (fn [tag] (tag:view_only)))
+                      (btn [mod-key] 1 (fn [tag] (when client.focus
+                                                   (client.focus:move_to_tag tag))))
+                      (btn           3 awful.tag.viewtoggle)
+                      (btn [mod-key] 3 (fn [tag] (when client.focus
+                                                   (client.focus:toggle_tag tag))))
+                      (btn 4 (fn [tag] (awful.tag.viewprev tag.screen)))
+                      (btn 5 (fn [tag] (awful.tag.viewnext tag.screen)))]}))
+
+    (set screen.mytasklist
          (awful.widget.tasklist
-           {:screen  s
+           {:screen  screen
             :filter  awful.widget.tasklist.filter.currenttags
-            :buttons [(btn 1 (fn [c] (c:activate
-                                       {:context :tasklist
-                                        :action  :toggle_minimization})))
-                      (btn 3 (fn [] (awful.menu.client_list
-                                      {:theme {:width 250}})))
+            :buttons [(btn 1 (fn [client] (client:activate
+                                            {:context :tasklist
+                                             :action  :toggle_minimization})))
+                      (btn 3 (fn [] (awful.menu.client_list {:theme {:width 250}})))
                       (btn 4 (fn [] (awful.client.focus.byidx -1)))
                       (btn 5 (fn [] (awful.client.focus.byidx 1)))]}))
 
     ;; Create the wibox
-    (set s.mywibox
+    (set screen.mywibox
          (awful.wibar
            {:position :top
-            :screen   s
+            :screen   screen
             :widget
             {:layout wibox.layout.align.horizontal
              1 {:layout wibox.layout.fixed.horizontal
                 1 mylauncher
-                2 s.mytaglist
-                3 s.mypromptbox}
-             2 s.mytasklist
+                2 screen.mytaglist
+                3 screen.mypromptbox}
+             2 screen.mytasklist
              3 {:layout wibox.layout.fixed.horizontal
                 1 mykeyboardlayout
                 2 (wibox.widget.systray)
                 3 mytextclock
-                4 s.mylayoutbox}}}))))
+                4 screen.mylayoutbox}}}))))
 ;; }}} 
 
 ;; {{{ Mouse bindings
@@ -269,8 +269,8 @@
 ;; Layout related keybindings
 (binds
   [{:description "swap with next client by index" :group :client
-     :mods [mod-key :Shift] :key :j
-     :action (fn [] (awful.client.swap.byidx  1))}
+    :mods [mod-key :Shift] :key :j
+    :action (fn [] (awful.client.swap.byidx  1))}
    {:description "swap with previous client by index" :group :client
     :mods [mod-key :Shift] :key :k
     :action (fn [] (awful.client.swap.byidx -1))}
@@ -323,14 +323,14 @@
               (when client.focus
                 (local tag (. client.focus.screen.tags idx))
                 (when tag
-                     (client.focus:move_to_tag tag))))}
+                  (client.focus:move_to_tag tag))))}
    {:description "toggle focus client on tag" :group :tag
     :mods [mod-key :Control :Shift] :keygroup :numrow
     :action (fn [idx]
               (when client.focus
                 (local tag (. client.focus.screen.tags idx))
                 (when tag
-                     (client.focus:toggle_tag tag))))}
+                  (client.focus:toggle_tag tag))))}
    {:description "select layout directly" :group :layout
     :mods [mod-key] :keygroup :numpad
     :action (fn [idx]
@@ -342,9 +342,9 @@
   "request::default_mousebindings"
   (fn []
     (awful.mouse.append_client_mousebindings 
-      [(btn           1 (fn [c] (c:activate {:context :mouse_click})))
-       (btn [mod-key] 1 (fn [c] (c:activate {:context :mouse_click :action :mouse_move})))
-       (btn [mod-key] 3 (fn [c] (c:activate {:context :mouse_click :action :mouse_resize})))])))
+      [(btn           1 (fn [client] (client:activate {:context :mouse_click})))
+       (btn [mod-key] 1 (fn [client] (client:activate {:context :mouse_click :action :mouse_move})))
+       (btn [mod-key] 3 (fn [client] (client:activate {:context :mouse_click :action :mouse_resize})))])))
 
 (client.connect_signal
   "request::default_keybindings"
@@ -359,7 +359,7 @@
         :mods [mod-key :Shift] :key :c
         :action (fn [c] (c:kill))}
        {:description "toggle floating" :group :client
-        :mods [mod-key :Control] :key :Space
+        :mods [mod-key :Control] :key :space
         :action awful.client.floating.toggle}
        {:description "move to master" :group :client
         :mods [mod-key :Control] :key :Return
@@ -396,8 +396,8 @@
   (fn []
     ;; All clients will match this rule.
     (ruled.client.append_rule
-      {:id         :global
-       :rule       {}
+      {:id   :global
+       :rule {}
        :properties 
        {:focus     awful.client.focus.filter
         :raise     true
@@ -415,7 +415,7 @@
         ;; Note that the name property shown in xprop might be set slightly after creation of the client
         ;; and the name shown there might not match defined rules here.
         :name ["Event Tester"] ; - xev
-        
+
         :role ["AlarmWindow"   ; - Thunderbird's calendar.
                "ConfigWindow"  ; - Thunderbird's about:config.
                "pop-up"]}})    ; - e.g. Google Chrome's (detached) Developer Tools.
@@ -424,44 +424,44 @@
     (ruled.client.append_rule
       {:id         :titlebars
        :rule_any   {:type [:normal :dialog]}
-       :properties {:titlebars_enabled true}})
-   
-    ;; Set Firefox to always map on the tag named "2" on screen 1.
-    (ruled.client.append_rule
-      {:rule       {:class :Firefox}
-       :properties {:screen 1
-                    :tag    :2}})))
+       :properties {:titlebars_enabled true}})))
+
+    ; ;; Set Firefox to always map on the tag named "2" on screen 1.
+    ; (ruled.client.append_rule
+    ;   {:rule       {:class :Firefox}
+    ;    :properties {:screen 1
+    ;                 :tag    :2}})))
 ;; }}}
 
 ;; {{{ Titlebars
 ;; Add a titlebar if titlebars_enabled is set to true in the rules.
 (client.connect_signal "request::titlebars"
-  (fn [c]
+  (fn [client]
     ;; buttons for the titlebar
     (local buttons
       [(btn 1 (fn [] (c:activate {:context :titlebar
                                   :action  :mouse_move})))
        (btn 3 (fn [] (c:activate {:context :titlebar
                                   :action  :mouse_resize})))])
-    (local titlebar (awful.titlebar c))
+    (local titlebar (awful.titlebar client))
     (set titlebar.widget
          {1 ;; Left
-            {1 (awful.titlebar.widget.iconwidget c)
-             :buttons buttons
-             :layout wibox.layout.fixed.horizontal}
+          {1 (awful.titlebar.widget.iconwidget client)
+           :buttons buttons
+           :layout wibox.layout.fixed.horizontal}
           2 ;; Middle
-            {1 {:align  :center
-                :widget (awful.titlebar.widget.titlewidget c)}
-             :buttons buttons
-             :layout wibox.layout.flex.horizontal}
+          {1 {:align  :center
+              :widget (awful.titlebar.widget.titlewidget client)}
+           :buttons buttons
+           :layout wibox.layout.flex.horizontal}
           3 ;; Right
-            {1 (awful.titlebar.widget.floatingbutton  c)
-             2 (awful.titlebar.widget.maximizedbutton c)
-             3 (awful.titlebar.widget.stickybutton    c)
-             4 (awful.titlebar.widget.ontopbutton     c)
-             5 (awful.titlebar.widget.closebutton     c)
-             :layout wibox.layout.fixed.horizontal}
-             
+          {1 (awful.titlebar.widget.floatingbutton  client)
+           2 (awful.titlebar.widget.maximizedbutton client)
+           3 (awful.titlebar.widget.stickybutton    client)
+           4 (awful.titlebar.widget.ontopbutton     client)
+           5 (awful.titlebar.widget.closebutton     client)
+           :layout wibox.layout.fixed.horizontal}
+
           :layout wibox.layout.align.horizontal})))
 ;; }}}
 
@@ -480,5 +480,5 @@
 
 ;; Enable sloppy focus, so that focus follows mouse.
 (client.connect_signal "mouse::enter"
-  (fn [c] (c:activate {:context "mouse_enter" :raise true})))
+  (fn [client] (client:activate {:context "mouse_enter" :raise true})))
 
