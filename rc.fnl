@@ -138,10 +138,10 @@
     (set screen.mylayoutbox
          (awful.widget.layoutbox
            {:screen screen
-            :buttons [(btn 1 (fn [] (awful.layout.inc 1)))
+            :buttons [(btn 1 (fn [] (awful.layout.inc  1)))
                       (btn 3 (fn [] (awful.layout.inc -1)))
-                      (btn 4 (fn [] (awful.layout.inc 1)))
-                      (btn 5 (fn [] (awful.layout.inc -1)))]}))
+                      (btn 4 (fn [] (awful.layout.inc -1)))
+                      (btn 5 (fn [] (awful.layout.inc  1)))]}))
     (set screen.mytaglist
          (awful.widget.taglist
            {:screen  screen
@@ -164,7 +164,7 @@
                                              :action  :toggle_minimization})))
                       (btn 3 (fn [] (awful.menu.client_list {:theme {:width 250}})))
                       (btn 4 (fn [] (awful.client.focus.byidx -1)))
-                      (btn 5 (fn [] (awful.client.focus.byidx 1)))]}))
+                      (btn 5 (fn [] (awful.client.focus.byidx  1)))]}))
 
     ;; Create the wibox
     (set screen.mywibox
@@ -186,7 +186,7 @@
 ;; }}} 
 
 ;; {{{ Mouse bindings
-(awful.mouse.append_client_mousebindings
+(root.buttons
   [(btn 3 (fn [] (mymainmenu:toggle)))
    (btn 4 awful.tag.vievprev)
    (btn 5 awful.tag.viewnext)])
